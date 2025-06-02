@@ -40,7 +40,7 @@ public class MainWindow extends Application {
                 simulationWindow.show();
             }
         });
-
+        
         // Update description when selection changes
         phenomenaList.getSelectionModel().selectedItemProperty().addListener(
             (obs, oldVal, newVal) -> {
@@ -51,7 +51,7 @@ public class MainWindow extends Application {
                 }
             }
         );
-
+        
         // Layout
         VBox rightPanel = new VBox(10);
         rightPanel.setPadding(new Insets(0, 0, 0, 10));
@@ -59,7 +59,7 @@ public class MainWindow extends Application {
 
         root.setCenter(phenomenaList);
         root.setRight(rightPanel);
-
+        
         // Scene setup
         Scene scene = new Scene(root, 800, 600);
         primaryStage.setTitle("Физические симуляции");
