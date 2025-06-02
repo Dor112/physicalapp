@@ -4,6 +4,13 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.Stop;
+import javafx.scene.paint.RadialGradient;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.StrokeLineJoin;
 import com.physicalapp.model.Phenomenon;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +23,14 @@ public class SimulationController {
     private AnimationTimer animationTimer;
     private long lastUpdate = 0;
     private double time = 0;
+
+    // Modern color scheme
+    private static final Color PRIMARY_COLOR = Color.web("#3498db");
+    private static final Color SECONDARY_COLOR = Color.web("#2980b9");
+    private static final Color ACCENT_COLOR = Color.web("#e74c3c");
+    private static final Color BACKGROUND_COLOR = Color.web("#f5f7fa");
+    private static final Color GRID_COLOR = Color.web("#ecf0f1");
+    private static final double SHADOW_BLUR = 10;
 
     public SimulationController(Phenomenon phenomenon, Canvas canvas) {
         this.phenomenon = phenomenon;
@@ -119,10 +134,34 @@ public class SimulationController {
         }
     }
 
+    private void drawGrid() {
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+        double spacing = 20;
+
+        gc.setStroke(GRID_COLOR);
+        gc.setLineWidth(1);
+
+        // Draw vertical lines
+        for (double x = 0; x <= width; x += spacing) {
+            gc.strokeLine(x, 0, x, height);
+        }
+
+        // Draw horizontal lines
+        for (double y = 0; y <= height; y += spacing) {
+            gc.strokeLine(0, y, width, y);
+        }
+    }
+
     private void updateSimulation(double deltaTime) {
-        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        gc.setStroke(Color.BLACK);
+        gc.setFill(BACKGROUND_COLOR);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        
+        drawGrid();
+        
         gc.setLineWidth(2);
+        gc.setLineCap(StrokeLineCap.ROUND);
+        gc.setLineJoin(StrokeLineJoin.ROUND);
 
         switch (phenomenon.getId()) {
             case "simple-pendulum" -> drawSimplePendulum();
@@ -138,28 +177,47 @@ public class SimulationController {
     }
 
     private void drawSimplePendulum() {
-        double length = parameters.get("length") * 100; // Convert to pixels
+        double length = parameters.get("length") * 100;
         double angle = Math.toRadians(parameters.get("angle"));
         double damping = parameters.get("damping");
         
-        // Calculate pendulum position
         double g = 9.81;
-        double omega = Math.sqrt(g / (length / 100)); // Convert length back to meters for calculation
+        double omega = Math.sqrt(g / (length / 100));
         double dampedAngle = angle * Math.exp(-damping * time) * Math.cos(omega * time);
         
-        // Drawing
         double centerX = canvas.getWidth() / 2;
         double centerY = canvas.getHeight() / 3;
         
         double bobX = centerX + length * Math.sin(dampedAngle);
         double bobY = centerY + length * Math.cos(dampedAngle);
         
-        // Draw string
+        // Draw string with gradient
+        LinearGradient stringGradient = new LinearGradient(
+            centerX, centerY,
+            bobX, bobY,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, PRIMARY_COLOR),
+            new Stop(1, SECONDARY_COLOR)
+        );
+        gc.setStroke(stringGradient);
+        gc.setLineWidth(3);
         gc.strokeLine(centerX, centerY, bobX, bobY);
         
-        // Draw bob
-        gc.setFill(Color.RED);
-        gc.fillOval(bobX - 10, bobY - 10, 20, 20);
+        // Draw pivot point with shadow
+        gc.setFill(PRIMARY_COLOR);
+        gc.setEffect(new DropShadow(SHADOW_BLUR, Color.rgb(0, 0, 0, 0.3)));
+        gc.fillOval(centerX - 8, centerY - 8, 16, 16);
+        
+        // Draw bob with gradient and shadow
+        RadialGradient bobGradient = new RadialGradient(
+            0, 0, bobX, bobY, 15,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, ACCENT_COLOR),
+            new Stop(1, ACCENT_COLOR.darker())
+        );
+        gc.setFill(bobGradient);
+        gc.fillOval(bobX - 15, bobY - 15, 30, 30);
+        gc.setEffect(null);
     }
 
     private void drawDoublePendulum() {
@@ -168,7 +226,6 @@ public class SimulationController {
         double theta1 = Math.toRadians(parameters.get("angle1"));
         double theta2 = Math.toRadians(parameters.get("angle2"));
         
-        // Calculate positions
         double centerX = canvas.getWidth() / 2;
         double centerY = canvas.getHeight() / 3;
         
@@ -178,14 +235,54 @@ public class SimulationController {
         double x2 = x1 + l2 * Math.sin(theta2);
         double y2 = y1 + l2 * Math.cos(theta2);
         
-        // Draw strings
+        // Draw strings with gradients
+        LinearGradient string1Gradient = new LinearGradient(
+            centerX, centerY, x1, y1,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, PRIMARY_COLOR),
+            new Stop(1, SECONDARY_COLOR)
+        );
+        LinearGradient string2Gradient = new LinearGradient(
+            x1, y1, x2, y2,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, PRIMARY_COLOR),
+            new Stop(1, SECONDARY_COLOR)
+        );
+        
+        gc.setLineWidth(3);
+        gc.setStroke(string1Gradient);
         gc.strokeLine(centerX, centerY, x1, y1);
+        gc.setStroke(string2Gradient);
         gc.strokeLine(x1, y1, x2, y2);
         
-        // Draw bobs
-        gc.setFill(Color.RED);
-        gc.fillOval(x1 - 10, y1 - 10, 20, 20);
-        gc.fillOval(x2 - 10, y2 - 10, 20, 20);
+        // Draw pivot and bobs with shadows
+        gc.setEffect(new DropShadow(SHADOW_BLUR, Color.rgb(0, 0, 0, 0.3)));
+        
+        // Pivot point
+        gc.setFill(PRIMARY_COLOR);
+        gc.fillOval(centerX - 8, centerY - 8, 16, 16);
+        
+        // First bob
+        RadialGradient bob1Gradient = new RadialGradient(
+            0, 0, x1, y1, 15,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, ACCENT_COLOR),
+            new Stop(1, ACCENT_COLOR.darker())
+        );
+        gc.setFill(bob1Gradient);
+        gc.fillOval(x1 - 15, y1 - 15, 30, 30);
+        
+        // Second bob
+        RadialGradient bob2Gradient = new RadialGradient(
+            0, 0, x2, y2, 15,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, ACCENT_COLOR),
+            new Stop(1, ACCENT_COLOR.darker())
+        );
+        gc.setFill(bob2Gradient);
+        gc.fillOval(x2 - 15, y2 - 15, 30, 30);
+        
+        gc.setEffect(null);
     }
 
     private void drawStringWave() {
@@ -196,11 +293,22 @@ public class SimulationController {
         double width = canvas.getWidth();
         double centerY = canvas.getHeight() / 2;
         
+        // Draw wave with gradient
+        LinearGradient waveGradient = new LinearGradient(
+            0, centerY - amplitude,
+            0, centerY + amplitude,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, PRIMARY_COLOR),
+            new Stop(1, SECONDARY_COLOR)
+        );
+        gc.setStroke(waveGradient);
+        gc.setLineWidth(3);
+        
         gc.beginPath();
         gc.moveTo(0, centerY);
         
         for (double x = 0; x <= width; x++) {
-            double wavelength = Math.sqrt(tension) * 50; // Simplified wave speed calculation
+            double wavelength = Math.sqrt(tension) * 50;
             double y = centerY + amplitude * Math.sin(2 * Math.PI * (x / wavelength - frequency * time));
             gc.lineTo(x, y);
         }
@@ -214,24 +322,42 @@ public class SimulationController {
         double damping = parameters.get("damping");
         
         double omega = Math.sqrt(k / m);
-        double amplitude = 100; // pixels
+        double amplitude = 100;
         
         double centerX = canvas.getWidth() / 2;
         double centerY = canvas.getHeight() / 2;
         
-        // Calculate displacement
         double displacement = amplitude * Math.exp(-damping * time) * Math.cos(omega * time);
         
-        // Draw spring (simplified as a line)
+        // Draw wall with shadow
+        gc.setEffect(new DropShadow(SHADOW_BLUR, Color.rgb(0, 0, 0, 0.3)));
+        gc.setFill(Color.web("#95a5a6"));
+        gc.fillRect(centerX - 120, centerY - 50, 20, 100);
+        
+        // Draw spring with gradient
+        LinearGradient springGradient = new LinearGradient(
+            centerX - 100, centerY,
+            centerX + displacement - 20, centerY,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, PRIMARY_COLOR),
+            new Stop(1, SECONDARY_COLOR)
+        );
+        gc.setStroke(springGradient);
+        gc.setLineWidth(3);
         gc.strokeLine(centerX - 100, centerY, centerX + displacement - 20, centerY);
         
-        // Draw mass
-        gc.setFill(Color.BLUE);
+        // Draw mass with gradient
+        RadialGradient massGradient = new RadialGradient(
+            0, 0,
+            centerX + displacement, centerY,
+            20, false, CycleMethod.NO_CYCLE,
+            new Stop(0, ACCENT_COLOR),
+            new Stop(1, ACCENT_COLOR.darker())
+        );
+        gc.setFill(massGradient);
         gc.fillRect(centerX + displacement - 20, centerY - 20, 40, 40);
         
-        // Draw wall
-        gc.setFill(Color.GRAY);
-        gc.fillRect(centerX - 120, centerY - 50, 20, 100);
+        gc.setEffect(null);
     }
 
     private void drawStandingWaves() {
@@ -241,6 +367,17 @@ public class SimulationController {
         
         double width = canvas.getWidth();
         double centerY = canvas.getHeight() / 2;
+        
+        // Draw wave with gradient
+        LinearGradient waveGradient = new LinearGradient(
+            0, centerY - amplitude,
+            0, centerY + amplitude,
+            false, CycleMethod.NO_CYCLE,
+            new Stop(0, PRIMARY_COLOR),
+            new Stop(1, SECONDARY_COLOR)
+        );
+        gc.setStroke(waveGradient);
+        gc.setLineWidth(3);
         
         gc.beginPath();
         gc.moveTo(0, centerY);
@@ -254,12 +391,14 @@ public class SimulationController {
         
         gc.stroke();
         
-        // Draw nodes
-        gc.setFill(Color.RED);
+        // Draw nodes with shadow effect
+        gc.setEffect(new DropShadow(SHADOW_BLUR, Color.rgb(0, 0, 0, 0.3)));
+        gc.setFill(ACCENT_COLOR);
         for (int i = 0; i <= nodes; i++) {
             double x = i * width / nodes;
-            gc.fillOval(x - 5, centerY - 5, 10, 10);
+            gc.fillOval(x - 6, centerY - 6, 12, 12);
         }
+        gc.setEffect(null);
     }
 
     private void drawImpulse() {

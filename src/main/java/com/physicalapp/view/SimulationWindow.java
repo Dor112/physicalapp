@@ -21,47 +21,90 @@ public class SimulationWindow extends Stage {
     private VBox parametersPanel;
     private TextArea descriptionView;
     private SimulationController controller;
-    private static final String PANEL_STYLE = """
-        -fx-background-color: #f5f5f5;
-        -fx-border-color: #ddd;
-        -fx-border-width: 1;
-        -fx-border-radius: 5;
-        -fx-background-radius: 5;
-        """;
     
+    private static final String FONT_FAMILY = "-fx-font-family: 'Segoe UI', 'Roboto', sans-serif;";
+    
+    private static final String WINDOW_STYLE = """
+        -fx-background-color: #f5f7fa;
+        """ + FONT_FAMILY;
+        
     private static final String TITLE_STYLE = """
-        -fx-font-size: 14px;
+        -fx-font-size: 20px;
         -fx-font-weight: bold;
         -fx-text-fill: #2c3e50;
-        -fx-padding: 5 0 5 0;
-        """;
+        """ + FONT_FAMILY;
+        
+    private static final String PANEL_STYLE = """
+        -fx-background-color: white;
+        -fx-background-radius: 8;
+        -fx-border-radius: 8;
+        -fx-border-color: #e0e0e0;
+        -fx-border-width: 1;
+        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 0);
+        """ + FONT_FAMILY;
     
     private static final String PARAM_GROUP_STYLE = """
         -fx-spacing: 10;
-        -fx-padding: 10;
+        -fx-padding: 15;
         -fx-background-color: white;
-        -fx-border-color: #eee;
+        -fx-background-radius: 8;
+        -fx-border-radius: 8;
+        -fx-border-color: #e0e0e0;
         -fx-border-width: 1;
-        -fx-border-radius: 3;
-        -fx-background-radius: 3;
+        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 0);
+        """ + FONT_FAMILY;
+        
+    private static final String SLIDER_STYLE = """
+        -fx-pref-width: 250;
+        -fx-background-radius: 4;
+        """ + FONT_FAMILY;
+        
+    private static final String LABEL_STYLE = """
+        -fx-text-fill: #34495e;
+        -fx-font-size: 14px;
+        """ + FONT_FAMILY;
+        
+    private static final String VALUE_LABEL_STYLE = """
+        -fx-text-fill: #3498db;
+        -fx-font-weight: bold;
+        -fx-font-size: 14px;
+        """ + FONT_FAMILY;
+        
+    private static final String DESCRIPTION_STYLE = """
+        -fx-font-family: 'Segoe UI', Arial, sans-serif;
+        -fx-font-size: 14px;
+        -fx-text-fill: #34495e;
+        -fx-background-color: white;
+        -fx-background-radius: 8;
+        -fx-border-radius: 8;
+        -fx-border-color: #e0e0e0;
+        -fx-border-width: 1;
+        -fx-padding: 20;
+        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 0);
         """;
 
     public SimulationWindow(Phenomenon phenomenon) {
         BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: white;");
-        
+        root.setStyle(WINDOW_STYLE);
+        root.setPadding(new Insets(20));
+
+        // Setup title
+        Label title = new Label(phenomenon.getName());
+        title.setStyle(TITLE_STYLE);
+        BorderPane.setMargin(title, new Insets(0, 0, 20, 0));
+        root.setTop(title);
+
         // Setup simulation canvas with border
         simulationCanvas = new Canvas(600, 400);
         VBox canvasContainer = new VBox(simulationCanvas);
         canvasContainer.setStyle(PANEL_STYLE);
-        canvasContainer.setPadding(new Insets(10));
+        canvasContainer.setPadding(new Insets(15));
         root.setCenter(canvasContainer);
 
         // Setup parameters panel
         parametersPanel = new VBox(15);
-        parametersPanel.setPadding(new Insets(15));
+        parametersPanel.setPadding(new Insets(0, 0, 0, 20));
         parametersPanel.setPrefWidth(300);
-        parametersPanel.setStyle(PANEL_STYLE);
         
         // Add title to parameters panel
         Label paramsTitle = new Label("Параметры симуляции");
@@ -73,27 +116,25 @@ public class SimulationWindow extends Stage {
         // Wrap parameters panel in scroll pane
         ScrollPane paramsScroll = new ScrollPane(parametersPanel);
         paramsScroll.setFitToWidth(true);
-        paramsScroll.setStyle("-fx-background-color: transparent;");
+        paramsScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        paramsScroll.setPadding(new Insets(20, 0, 0, 0));
         root.setRight(paramsScroll);
 
         // Setup description view
         descriptionView = new TextArea();
         descriptionView.setEditable(false);
         descriptionView.setWrapText(true);
-        descriptionView.setStyle("""
-            -fx-font-family: 'Segoe UI', Arial, sans-serif;
-            -fx-font-size: 13px;
-            """);
+        descriptionView.setPrefRowCount(15);
+        descriptionView.setStyle(DESCRIPTION_STYLE);
         
-        VBox descriptionContainer = new VBox(5);
-        descriptionContainer.setStyle(PANEL_STYLE);
-        descriptionContainer.setPadding(new Insets(10));
+        VBox descriptionContainer = new VBox(15);
+        descriptionContainer.setPadding(new Insets(20, 0, 0, 0));
         
         Label descTitle = new Label("Описание явления");
         descTitle.setStyle(TITLE_STYLE);
         
         descriptionContainer.getChildren().addAll(descTitle, descriptionView);
-        descriptionContainer.setPrefHeight(200);
+        descriptionContainer.setPrefHeight(350);
         root.setBottom(descriptionContainer);
 
         // Initialize controller
@@ -103,49 +144,56 @@ public class SimulationWindow extends Stage {
         loadDescription(phenomenon);
 
         setTitle(phenomenon.getName());
-        setScene(new Scene(root, 920, 700));
+        setScene(new Scene(root, 960, 900));
 
         // Cleanup on window close
         setOnCloseRequest(e -> controller.stop());
     }
 
     private VBox createParameterGroup(String title) {
-        VBox group = new VBox(8);
+        VBox group = new VBox(10);
         group.setStyle(PARAM_GROUP_STYLE);
         
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #34495e;");
+        titleLabel.setStyle(TITLE_STYLE);
         
         group.getChildren().add(titleLabel);
         return group;
     }
 
-    private Slider createParameterSlider(String name, double min, double max, double value) {
-        VBox container = new VBox(5);
+    private VBox createParameterSlider(String name, double min, double max, double value) {
+        VBox container = new VBox(8);
         container.setAlignment(Pos.CENTER_LEFT);
+        container.setPadding(new Insets(0, 10, 0, 10));
+        
+        HBox labelContainer = new HBox(10);
+        labelContainer.setAlignment(Pos.CENTER_LEFT);
         
         Label label = new Label(name);
-        label.setStyle("-fx-text-fill: #2c3e50;");
-        
-        Slider slider = new Slider(min, max, value);
-        slider.setStyle("""
-            -fx-pref-width: 200;
-            -fx-background-radius: 3;
-            """);
-        slider.setShowTickLabels(true);
-        slider.setShowTickMarks(true);
+        label.setStyle(LABEL_STYLE);
         
         Label valueLabel = new Label(String.format("%.2f", value));
-        valueLabel.setStyle("-fx-text-fill: #7f8c8d;");
+        valueLabel.setStyle(VALUE_LABEL_STYLE);
+        valueLabel.setMinWidth(60);
+        
+        labelContainer.getChildren().addAll(label, valueLabel);
+        
+        Slider slider = new Slider(min, max, value);
+        slider.setStyle(SLIDER_STYLE);
+        slider.setShowTickLabels(true);
+        slider.setShowTickMarks(true);
+        slider.setMajorTickUnit((max - min) / 4);
+        slider.setBlockIncrement((max - min) / 10);
+        
         slider.valueProperty().addListener((obs, old, val) -> 
             valueLabel.setText(String.format("%.2f", val.doubleValue())));
         
-        HBox valueContainer = new HBox(5);
-        valueContainer.setAlignment(Pos.CENTER_LEFT);
-        valueContainer.getChildren().addAll(label, valueLabel);
+        container.getChildren().addAll(labelContainer, slider);
         
-        container.getChildren().addAll(valueContainer, slider);
-        return slider;
+        // Store the slider in the container's properties for easy access
+        container.setUserData(slider);
+        
+        return container;
     }
 
     private void setupParameters(Phenomenon phenomenon) {
@@ -163,132 +211,133 @@ public class SimulationWindow extends Stage {
 
     private void setupSimplePendulumParams() {
         // Length parameter (0.1 to 2.0 meters)
-        Slider lengthSlider = createParameterSlider("Length (m)", 0.1, 2.0, 1.0);
-        lengthSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox lengthContainer = createParameterSlider("Length (m)", 0.1, 2.0, 1.0);
+        ((Slider)lengthContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("length", val.doubleValue()));
 
         // Initial angle parameter (-180 to 180 degrees)
-        Slider angleSlider = createParameterSlider("Initial Angle (degrees)", -180, 180, 45);
-        angleSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox angleContainer = createParameterSlider("Initial Angle (degrees)", -180, 180, 45);
+        ((Slider)angleContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("angle", val.doubleValue()));
 
         // Damping coefficient (0 to 1)
-        Slider dampingSlider = createParameterSlider("Damping", 0, 1, 0.1);
-        dampingSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox dampingContainer = createParameterSlider("Damping", 0, 1, 0.1);
+        ((Slider)dampingContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("damping", val.doubleValue()));
 
         parametersPanel.getChildren().addAll(
             createParameterGroup("Simple Pendulum Parameters:"),
-            lengthSlider,
-            angleSlider,
-            dampingSlider
+            lengthContainer,
+            angleContainer,
+            dampingContainer
         );
     }
 
     private void setupDoublePendulumParams() {
         // Length of first pendulum (0.1 to 2.0 meters)
-        Slider length1Slider = createParameterSlider("Length 1 (m)", 0.1, 2.0, 1.0);
-        length1Slider.valueProperty().addListener((obs, old, val) -> 
+        VBox length1Container = createParameterSlider("Length 1 (m)", 0.1, 2.0, 1.0);
+        ((Slider)length1Container.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("length1", val.doubleValue()));
 
         // Length of second pendulum (0.1 to 2.0 meters)
-        Slider length2Slider = createParameterSlider("Length 2 (m)", 0.1, 2.0, 1.0);
-        length2Slider.valueProperty().addListener((obs, old, val) -> 
+        VBox length2Container = createParameterSlider("Length 2 (m)", 0.1, 2.0, 1.0);
+        ((Slider)length2Container.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("length2", val.doubleValue()));
 
         // Initial angles (-180 to 180 degrees)
-        Slider angle1Slider = createParameterSlider("Angle 1 (degrees)", -180, 180, 45);
-        angle1Slider.valueProperty().addListener((obs, old, val) -> 
+        VBox angle1Container = createParameterSlider("Angle 1 (degrees)", -180, 180, 45);
+        ((Slider)angle1Container.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("angle1", val.doubleValue()));
 
-        Slider angle2Slider = createParameterSlider("Angle 2 (degrees)", -180, 180, 45);
-        angle2Slider.valueProperty().addListener((obs, old, val) -> 
+        VBox angle2Container = createParameterSlider("Angle 2 (degrees)", -180, 180, 45);
+        ((Slider)angle2Container.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("angle2", val.doubleValue()));
 
         parametersPanel.getChildren().addAll(
             createParameterGroup("Double Pendulum Parameters:"),
-            length1Slider,
-            length2Slider,
-            angle1Slider,
-            angle2Slider
+            length1Container,
+            length2Container,
+            angle1Container,
+            angle2Container
         );
     }
 
     private void setupStringWaveParams() {
         // String tension (0 to 100 N)
-        Slider tensionSlider = createParameterSlider("Tension (N)", 0, 100, 50);
-        tensionSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox tensionContainer = createParameterSlider("Tension (N)", 0, 100, 50);
+        ((Slider)tensionContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("tension", val.doubleValue()));
 
         // Wave amplitude (0 to 1)
-        Slider amplitudeSlider = createParameterSlider("Amplitude", 0, 1, 0.5);
-        amplitudeSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox amplitudeContainer = createParameterSlider("Amplitude", 0, 1, 0.5);
+        ((Slider)amplitudeContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("amplitude", val.doubleValue()));
 
         // Wave frequency (0 to 10 Hz)
-        Slider frequencySlider = createParameterSlider("Frequency (Hz)", 0, 10, 1);
-        frequencySlider.valueProperty().addListener((obs, old, val) -> 
+        VBox frequencyContainer = createParameterSlider("Frequency (Hz)", 0, 10, 1);
+        ((Slider)frequencyContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("frequency", val.doubleValue()));
 
         parametersPanel.getChildren().addAll(
             createParameterGroup("String Wave Parameters:"),
-            tensionSlider,
-            amplitudeSlider,
-            frequencySlider
+            tensionContainer,
+            amplitudeContainer,
+            frequencyContainer
         );
     }
 
     private void setupSpringOscillatorParams() {
         // Spring constant (0 to 100 N/m)
-        Slider springConstantSlider = createParameterSlider("Spring Constant (N/m)", 0, 100, 50);
-        springConstantSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox springConstantContainer = createParameterSlider("Spring Constant (N/m)", 0, 100, 50);
+        ((Slider)springConstantContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("springConstant", val.doubleValue()));
 
         // Mass (0.1 to 10 kg)
-        Slider massSlider = createParameterSlider("Mass (kg)", 0.1, 10, 1);
-        massSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox massContainer = createParameterSlider("Mass (kg)", 0.1, 10, 1);
+        ((Slider)massContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("mass", val.doubleValue()));
 
         // Damping coefficient (0 to 1)
-        Slider dampingSlider = createParameterSlider("Damping", 0, 1, 0.1);
-        dampingSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox dampingContainer = createParameterSlider("Damping", 0, 1, 0.1);
+        ((Slider)dampingContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("damping", val.doubleValue()));
 
         parametersPanel.getChildren().addAll(
             createParameterGroup("Spring Oscillator Parameters:"),
-            springConstantSlider,
-            massSlider,
-            dampingSlider
+            springConstantContainer,
+            massContainer,
+            dampingContainer
         );
     }
 
     private void setupStandingWaveParams() {
         // Wave speed (0 to 10 m/s)
-        Slider speedSlider = createParameterSlider("Wave Speed (m/s)", 0, 10, 5);
-        speedSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox speedContainer = createParameterSlider("Wave Speed (m/s)", 0, 10, 5);
+        ((Slider)speedContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("speed", val.doubleValue()));
 
         // Number of nodes (1 to 10)
-        Slider nodesSlider = createParameterSlider("Number of Nodes", 1, 10, 3);
-        nodesSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox nodesContainer = createParameterSlider("Number of Nodes", 1, 10, 3);
+        ((Slider)nodesContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("nodes", val.doubleValue()));
 
         // Amplitude (0 to 1)
-        Slider amplitudeSlider = createParameterSlider("Amplitude", 0, 1, 0.5);
-        amplitudeSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox amplitudeContainer = createParameterSlider("Amplitude", 0, 1, 0.5);
+        ((Slider)amplitudeContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("amplitude", val.doubleValue()));
 
         parametersPanel.getChildren().addAll(
             createParameterGroup("Standing Wave Parameters:"),
-            speedSlider,
-            nodesSlider,
-            amplitudeSlider
+            speedContainer,
+            nodesContainer,
+            amplitudeContainer
         );
     }
 
     private void setupImpulseParams() {
         // Impulse type selection (0-3: Gaussian, Square, Triangular, Sinc)
-        Slider typeSlider = createParameterSlider("Impulse Type", 0, 3, 0);
+        VBox typeContainer = createParameterSlider("Impulse Type", 0, 3, 0);
+        Slider typeSlider = (Slider)typeContainer.getUserData();
         typeSlider.setSnapToTicks(true);
         typeSlider.setMajorTickUnit(1);
         typeSlider.setMinorTickCount(0);
@@ -296,63 +345,63 @@ public class SimulationWindow extends Stage {
             controller.updateParameters("type", val.doubleValue()));
 
         // Amplitude (0 to 2)
-        Slider amplitudeSlider = createParameterSlider("Amplitude", 0, 2, 1);
-        amplitudeSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox amplitudeContainer = createParameterSlider("Amplitude", 0, 2, 1);
+        ((Slider)amplitudeContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("amplitude", val.doubleValue()));
 
         // Width/Duration (0.1 to 2.0)
-        Slider widthSlider = createParameterSlider("Width", 0.1, 2.0, 0.5);
-        widthSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox widthContainer = createParameterSlider("Width", 0.1, 2.0, 0.5);
+        ((Slider)widthContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("width", val.doubleValue()));
 
         // Propagation speed (0 to 10)
-        Slider speedSlider = createParameterSlider("Speed", 0, 10, 5);
-        speedSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox speedContainer = createParameterSlider("Speed", 0, 10, 5);
+        ((Slider)speedContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("speed", val.doubleValue()));
 
         parametersPanel.getChildren().addAll(
             createParameterGroup("Impulse Parameters:"),
             new Label("Type: 0-Gaussian, 1-Square, 2-Triangular, 3-Sinc"),
-            typeSlider,
-            amplitudeSlider,
-            widthSlider,
-            speedSlider
+            typeContainer,
+            amplitudeContainer,
+            widthContainer,
+            speedContainer
         );
     }
 
     private void setupCollisionParams() {
         // Масса первого тела (0.1 to 10 кг)
-        Slider mass1Slider = createParameterSlider("Масса 1 (кг)", 0.1, 10, 1);
-        mass1Slider.valueProperty().addListener((obs, old, val) -> 
+        VBox mass1Container = createParameterSlider("Масса 1 (кг)", 0.1, 10, 1);
+        ((Slider)mass1Container.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("mass1", val.doubleValue()));
 
         // Масса второго тела (0.1 to 10 кг)
-        Slider mass2Slider = createParameterSlider("Масса 2 (кг)", 0.1, 10, 1);
-        mass2Slider.valueProperty().addListener((obs, old, val) -> 
+        VBox mass2Container = createParameterSlider("Масса 2 (кг)", 0.1, 10, 1);
+        ((Slider)mass2Container.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("mass2", val.doubleValue()));
 
         // Начальная скорость первого тела (-10 to 10 м/с)
-        Slider velocity1Slider = createParameterSlider("Скорость 1 (м/с)", -10, 10, 5);
-        velocity1Slider.valueProperty().addListener((obs, old, val) -> 
+        VBox velocity1Container = createParameterSlider("Скорость 1 (м/с)", -10, 10, 5);
+        ((Slider)velocity1Container.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("velocity1", val.doubleValue()));
 
         // Начальная скорость второго тела (-10 to 10 м/с)
-        Slider velocity2Slider = createParameterSlider("Скорость 2 (м/с)", -10, 10, -5);
-        velocity2Slider.valueProperty().addListener((obs, old, val) -> 
+        VBox velocity2Container = createParameterSlider("Скорость 2 (м/с)", -10, 10, -5);
+        ((Slider)velocity2Container.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("velocity2", val.doubleValue()));
 
         // Коэффициент восстановления (0 - АНУ до 1 - АУУ)
-        Slider restitutionSlider = createParameterSlider("Коэффициент восстановления", 0, 1, 1);
-        restitutionSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox restitutionContainer = createParameterSlider("Коэффициент восстановления", 0, 1, 1);
+        ((Slider)restitutionContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("restitution", val.doubleValue()));
 
         parametersPanel.getChildren().addAll(
             createParameterGroup("Параметры столкновения:"),
-            mass1Slider,
-            mass2Slider,
-            velocity1Slider,
-            velocity2Slider,
-            restitutionSlider
+            mass1Container,
+            mass2Container,
+            velocity1Container,
+            velocity2Container,
+            restitutionContainer
         );
     }
 
@@ -360,7 +409,8 @@ public class SimulationWindow extends Stage {
         VBox group = createParameterGroup("Параметры отражения");
         
         // Тип зеркала (0 - плоское, 1 - вогнутое, 2 - выпуклое)
-        Slider mirrorTypeSlider = createParameterSlider("Тип зеркала", 0, 2, 0);
+        VBox mirrorTypeContainer = createParameterSlider("Тип зеркала", 0, 2, 0);
+        Slider mirrorTypeSlider = (Slider)mirrorTypeContainer.getUserData();
         mirrorTypeSlider.setSnapToTicks(true);
         mirrorTypeSlider.setMajorTickUnit(1);
         mirrorTypeSlider.setMinorTickCount(0);
@@ -371,15 +421,16 @@ public class SimulationWindow extends Stage {
         typeHint.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 11px;");
         
         // Остальные слайдеры
-        Slider curvatureSlider = createParameterSlider("Кривизна", 0.1, 2.0, 1.0);
-        curvatureSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox curvatureContainer = createParameterSlider("Кривизна", 0.1, 2.0, 1.0);
+        ((Slider)curvatureContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("curvature", val.doubleValue()));
 
-        Slider angleSlider = createParameterSlider("Угол падения (°)", -80, 80, 30);
-        angleSlider.valueProperty().addListener((obs, old, val) -> 
+        VBox angleContainer = createParameterSlider("Угол падения (°)", -80, 80, 30);
+        ((Slider)angleContainer.getUserData()).valueProperty().addListener((obs, old, val) -> 
             controller.updateParameters("angle", val.doubleValue()));
 
-        Slider raysSlider = createParameterSlider("Количество лучей", 1, 10, 3);
+        VBox raysContainer = createParameterSlider("Количество лучей", 1, 10, 3);
+        Slider raysSlider = (Slider)raysContainer.getUserData();
         raysSlider.setSnapToTicks(true);
         raysSlider.setMajorTickUnit(1);
         raysSlider.setMinorTickCount(0);
@@ -387,11 +438,11 @@ public class SimulationWindow extends Stage {
             controller.updateParameters("rays", val.doubleValue()));
 
         group.getChildren().addAll(
-            mirrorTypeSlider,
+            mirrorTypeContainer,
             typeHint,
-            curvatureSlider,
-            angleSlider,
-            raysSlider
+            curvatureContainer,
+            angleContainer,
+            raysContainer
         );
         
         parametersPanel.getChildren().add(group);
