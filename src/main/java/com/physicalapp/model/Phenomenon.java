@@ -4,11 +4,13 @@ public class Phenomenon {
     private final String id;
     private final String name;
     private final String description;
+    private final String shortDescription;
 
-    public Phenomenon(String id, String name, String description) {
+    public Phenomenon(String id, String name, String description, String shortDescription) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.shortDescription = shortDescription;
     }
 
     public String getId() {
@@ -23,47 +25,59 @@ public class Phenomenon {
         return description;
     }
 
+    public String getShortDescription() {
+        return shortDescription;
+    }
+
     public static Phenomenon[] getAvailablePhenomena() {
         return new Phenomenon[] {
             new Phenomenon(
                 "simple-pendulum",
                 "Простой маятник",
-                "Моделирование движения простого маятника с учетом затухания"
+                "Полное описание простого маятника...",
+                "Моделирование колебаний простого маятника с учетом затухания"
             ),
             new Phenomenon(
                 "double-pendulum",
                 "Двойной маятник",
-                "Моделирование движения двойного маятника, демонстрирующего хаотическое поведение"
+                "Полное описание двойного маятника...",
+                "Демонстрация хаотической динамики двойного маятника"
             ),
             new Phenomenon(
                 "string-wave",
                 "Волна на струне",
-                "Моделирование распространения волны по натянутой струне"
+                "Полное описание волны на струне...",
+                "Визуализация распространения волн в натянутой струне"
             ),
             new Phenomenon(
                 "spring-oscillator",
                 "Пружинный осциллятор",
-                "Моделирование колебаний груза на пружине с учетом затухания"
+                "Полное описание пружинного осциллятора...",
+                "Моделирование колебаний груза на пружине"
             ),
             new Phenomenon(
                 "standing-waves",
                 "Стоячие волны",
-                "Моделирование стоячих волн при интерференции встречных волн"
+                "Полное описание стоячих волн...",
+                "Демонстрация образования стоячих волн и их мод"
             ),
             new Phenomenon(
                 "impulse-types",
-                "Виды импульса",
-                "Моделирование различных видов импульса и их распространения в среде"
+                "Типы импульсов",
+                "Полное описание типов импульсов...",
+                "Изучение различных типов импульсных сигналов"
             ),
             new Phenomenon(
                 "collisions",
-                "Столкновения тел",
-                "Моделирование столкновений тел с разными коэффициентами восстановления"
+                "Столкновения",
+                "Полное описание столкновений...",
+                "Моделирование упругих и неупругих столкновений"
             ),
             new Phenomenon(
                 "mirror-reflection",
                 "Отражение в зеркалах",
-                "Моделирование отражения световых лучей в зеркалах различных типов"
+                "Полное описание отражения в зеркалах...",
+                "Визуализация отражения света в различных типах зеркал"
             )
         };
     }

@@ -12,15 +12,15 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.stage.Stage;
 import com.physicalapp.model.Phenomenon;
 import com.physicalapp.controller.SimulationController;
 
-public class SimulationWindow extends Stage {
+public class SimulationWindow {
     private Canvas simulationCanvas;
     private VBox parametersPanel;
     private TextArea descriptionView;
     private SimulationController controller;
+    private VBox root;
     
     private static final String FONT_FAMILY = "-fx-font-family: 'Segoe UI', 'Roboto', sans-serif;";
     
@@ -84,27 +84,54 @@ public class SimulationWindow extends Stage {
         """;
 
     public SimulationWindow(Phenomenon phenomenon) {
-        BorderPane root = new BorderPane();
+        root = new VBox(20);
         root.setStyle(WINDOW_STYLE);
-        root.setPadding(new Insets(20));
+        root.setPadding(new Insets(0));
 
         // Setup title
         Label title = new Label(phenomenon.getName());
         title.setStyle(TITLE_STYLE);
-        BorderPane.setMargin(title, new Insets(0, 0, 20, 0));
-        root.setTop(title);
 
+        // Create main horizontal layout
+        HBox mainContent = new HBox(20);
+        
+        // Left side - simulation and description
+        VBox leftSide = new VBox(20);
+        leftSide.setPrefWidth(700);
+        
         // Setup simulation canvas with border
-        simulationCanvas = new Canvas(600, 400);
+        simulationCanvas = new Canvas(700, 400);
         VBox canvasContainer = new VBox(simulationCanvas);
         canvasContainer.setStyle(PANEL_STYLE);
         canvasContainer.setPadding(new Insets(15));
-        root.setCenter(canvasContainer);
 
+        // Setup description view
+        descriptionView = new TextArea();
+        descriptionView.setEditable(false);
+        descriptionView.setWrapText(true);
+        descriptionView.setPrefRowCount(30);
+        descriptionView.setPrefWidth(700);
+        descriptionView.setPrefHeight(450);
+        descriptionView.setStyle(DESCRIPTION_STYLE);
+        
+        VBox descriptionContainer = new VBox(15);
+        descriptionContainer.setPadding(new Insets(0, 15, 0, 0));
+        
+        Label descTitle = new Label("Описание явления");
+        descTitle.setStyle(TITLE_STYLE);
+        
+        descriptionContainer.getChildren().addAll(descTitle, descriptionView);
+        descriptionContainer.setPrefHeight(500);
+        
+        leftSide.getChildren().addAll(canvasContainer, descriptionContainer);
+
+        // Right side - parameters panel
+        VBox rightSide = new VBox(15);
+        rightSide.setPrefWidth(250);
+        
         // Setup parameters panel
         parametersPanel = new VBox(15);
-        parametersPanel.setPadding(new Insets(0, 0, 0, 20));
-        parametersPanel.setPrefWidth(300);
+        parametersPanel.setPadding(new Insets(0));
         
         // Add title to parameters panel
         Label paramsTitle = new Label("Параметры симуляции");
@@ -117,37 +144,39 @@ public class SimulationWindow extends Stage {
         ScrollPane paramsScroll = new ScrollPane(parametersPanel);
         paramsScroll.setFitToWidth(true);
         paramsScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
-        paramsScroll.setPadding(new Insets(20, 0, 0, 0));
-        root.setRight(paramsScroll);
+        
+        rightSide.getChildren().add(paramsScroll);
 
-        // Setup description view
-        descriptionView = new TextArea();
-        descriptionView.setEditable(false);
-        descriptionView.setWrapText(true);
-        descriptionView.setPrefRowCount(15);
-        descriptionView.setStyle(DESCRIPTION_STYLE);
-        
-        VBox descriptionContainer = new VBox(15);
-        descriptionContainer.setPadding(new Insets(20, 0, 0, 0));
-        
-        Label descTitle = new Label("Описание явления");
-        descTitle.setStyle(TITLE_STYLE);
-        
-        descriptionContainer.getChildren().addAll(descTitle, descriptionView);
-        descriptionContainer.setPrefHeight(350);
-        root.setBottom(descriptionContainer);
+        // Wrap everything in a scroll pane
+        ScrollPane mainScroll = new ScrollPane(mainContent);
+        mainScroll.setFitToWidth(true);
+        mainScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        mainScroll.setPadding(new Insets(0));
+        mainScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        mainScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+        // Add left and right sides to main content
+        mainContent.getChildren().addAll(leftSide, rightSide);
+        mainContent.setPadding(new Insets(0, 15, 15, 15));
+
+        // Add all components to root
+        root.getChildren().addAll(title, mainScroll);
 
         // Initialize controller
         controller = new SimulationController(phenomenon, simulationCanvas);
 
         // Load description
         loadDescription(phenomenon);
+    }
 
-        setTitle(phenomenon.getName());
-        setScene(new Scene(root, 960, 900));
+    public VBox getContent() {
+        return root;
+    }
 
-        // Cleanup on window close
-        setOnCloseRequest(e -> controller.stop());
+    public void stop() {
+        if (controller != null) {
+            controller.stop();
+        }
     }
 
     private VBox createParameterGroup(String title) {
