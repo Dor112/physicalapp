@@ -4,16 +4,16 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class SimplePendulumSimulation implements PhysicsSimulation {
-    private static final double G = 9.81; // Acceleration due to gravity (m/s^2)
+    private static final double G = 9.81;
     
-    private double length = 1.0; // Length of pendulum (m)
-    private double angle = Math.PI / 4; // Initial angle (radians)
-    private double angularVelocity = 0.0; // Angular velocity (rad/s)
-    private double damping = 0.1; // Damping coefficient
+    private double length = 1.0;
+    private double angle = Math.PI / 4;
+    private double angularVelocity = 0.0;
+    private double damping = 0.1;
     
     @Override
     public void update(double deltaTime) {
-        // Using RK4 integration method for better accuracy
+
         double k1 = calculateAcceleration(angle, angularVelocity);
         double l1 = angularVelocity;
         
@@ -42,24 +42,24 @@ public class SimplePendulumSimulation implements PhysicsSimulation {
         double width = gc.getCanvas().getWidth();
         double height = gc.getCanvas().getHeight();
         
-        // Convert simulation coordinates to screen coordinates
-        double scale = height / 3; // Scale factor to convert meters to pixels
+
+        double scale = height / 3;
         double pivotX = width / 2;
         double pivotY = height / 3;
         
         double bobX = pivotX + scale * length * Math.sin(angle);
         double bobY = pivotY + scale * length * Math.cos(angle);
         
-        // Draw pivot point
+
         gc.setFill(Color.BLACK);
         gc.fillOval(pivotX - 5, pivotY - 5, 10, 10);
         
-        // Draw rod
+
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(2);
         gc.strokeLine(pivotX, pivotY, bobX, bobY);
         
-        // Draw bob
+
         gc.setFill(Color.RED);
         gc.fillOval(bobX - 15, bobY - 15, 30, 30);
     }
@@ -71,7 +71,7 @@ public class SimplePendulumSimulation implements PhysicsSimulation {
             case "damping" -> damping = value;
             case "angle" -> {
                 angle = Math.toRadians(value);
-                angularVelocity = 0; // Reset velocity when angle is changed
+                angularVelocity = 0;
             }
         }
     }

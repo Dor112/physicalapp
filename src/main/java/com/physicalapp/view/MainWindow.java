@@ -13,6 +13,8 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import com.physicalapp.model.Phenomenon;
 import java.util.List;
+import javafx.stage.Screen;
+import javafx.geometry.Rectangle2D;
 
 public class MainWindow extends Stage {
     private BorderPane root;
@@ -77,10 +79,15 @@ public class MainWindow extends Stage {
         root.setPadding(new Insets(20));
         
         setupMainContent();
-        
-        scene = new Scene(root, 960, 800);
+
+
+        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+
+        scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight());
         setScene(scene);
         setTitle("Физические симуляции");
+
+        setFullScreen(true);
     }
 
     private void setupMainContent() {
@@ -117,12 +124,12 @@ public class MainWindow extends Stage {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    // Создаем контейнер для иконки и текста
+
                     HBox container = new HBox(15);
                     container.setAlignment(Pos.CENTER_LEFT);
                     container.setPadding(new Insets(10));
                     
-                    // Добавляем иконку
+
                     String iconPath = getIconPath(phenomenon.getId());
                     try {
                         Image icon = new Image(getClass().getResourceAsStream(iconPath));
@@ -131,28 +138,28 @@ public class MainWindow extends Stage {
                         imageView.setFitWidth(48);
                         container.getChildren().add(imageView);
                     } catch (Exception e) {
-                        // Если иконка не найдена, создаем placeholder
+
                         StackPane placeholder = new StackPane();
                         placeholder.setStyle("-fx-background-color: #ecf0f1; -fx-background-radius: 4;");
                         placeholder.setPrefSize(48, 48);
                         container.getChildren().add(placeholder);
                     }
                     
-                    // Создаем контейнер для текста
+
                     VBox textContainer = new VBox(5);
                     
-                    // Название явления
+
                     Label nameLabel = new Label(phenomenon.getName());
                     nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
                     
-                    // Краткое описание
+
                     Label descLabel = new Label(phenomenon.getShortDescription());
                     descLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
                     descLabel.setWrapText(true);
                     
                     textContainer.getChildren().addAll(nameLabel, descLabel);
                     
-                    // Добавляем кнопку запуска
+
                     Button launchButton = new Button("Запустить");
                     launchButton.setStyle(BUTTON_STYLE);
                     
@@ -164,7 +171,7 @@ public class MainWindow extends Stage {
                     
                     launchButton.setOnAction(e -> showSimulation(phenomenon));
                     
-                    // Добавляем разделитель для выравнивания кнопки справа
+
                     Region spacer = new Region();
                     HBox.setHgrow(spacer, Priority.ALWAYS);
                     
@@ -180,12 +187,12 @@ public class MainWindow extends Stage {
     }
 
     private void showSimulation(Phenomenon phenomenon) {
-        // Создаем новое содержимое для симуляции
+
         VBox simulationContent = new VBox(20);
         simulationContent.setAlignment(Pos.TOP_CENTER);
         simulationContent.setPadding(new Insets(20));
 
-        // Создаем кнопку "Назад"
+
         Button backButton = new Button("← Назад к списку");
         backButton.setStyle(BACK_BUTTON_STYLE);
         
@@ -197,26 +204,26 @@ public class MainWindow extends Stage {
         
         backButton.setOnAction(e -> {
             if (currentSimulation != null) {
-                currentSimulation.stop(); // Останавливаем текущую симуляцию
+                currentSimulation.stop();
                 currentSimulation = null;
             }
             root.setCenter(mainContent);
         });
 
-        // Создаем контейнер для кнопки назад
+
         HBox topBar = new HBox(backButton);
         topBar.setAlignment(Pos.CENTER_LEFT);
 
-        // Создаем новую симуляцию
+
         currentSimulation = new SimulationWindow(phenomenon);
         
-        // Добавляем содержимое симуляции в контейнер
+
         simulationContent.getChildren().addAll(
             topBar,
             currentSimulation.getContent()
         );
 
-        // Заменяем содержимое главного окна на симуляцию
+
         root.setCenter(simulationContent);
     }
 } 

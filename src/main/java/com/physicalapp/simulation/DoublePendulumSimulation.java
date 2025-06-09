@@ -33,13 +33,13 @@ public class DoublePendulumSimulation implements PhysicsSimulation {
     
     @Override
     public void update(double deltaTime) {
-        // Limit deltaTime to prevent instability
+
         deltaTime = Math.min(deltaTime, 0.016); // Max 16ms (roughly 60 FPS)
         
-        // Scale factor to make the motion more visible
+
         double scaleFactor = 2.0;
         
-        // Calculate accelerations
+
         double num1 = -g * (2 * mass1 + mass2) * Math.sin(angle1);
         double num2 = -mass2 * g * Math.sin(angle1 - 2 * angle2);
         double num3 = -2 * Math.sin(angle1 - angle2) * mass2;
@@ -55,13 +55,13 @@ public class DoublePendulumSimulation implements PhysicsSimulation {
         double den2 = length2 * (2 * mass1 + mass2 - mass2 * Math.cos(2 * angle1 - 2 * angle2));
         double angleAcceleration2 = (num5 * (num6 + num7 + num8)) / den2;
 
-        // Update velocities and angles with scaling
+
         angleVelocity1 += angleAcceleration1 * deltaTime * scaleFactor;
         angleVelocity2 += angleAcceleration2 * deltaTime * scaleFactor;
         angle1 += angleVelocity1 * deltaTime * scaleFactor;
         angle2 += angleVelocity2 * deltaTime * scaleFactor;
 
-        // Add very slight damping to prevent infinite motion
+
         angleVelocity1 *= 0.9999;
         angleVelocity2 *= 0.9999;
     }
@@ -71,21 +71,21 @@ public class DoublePendulumSimulation implements PhysicsSimulation {
         double width = gc.getCanvas().getWidth();
         double height = gc.getCanvas().getHeight();
         
-        // Clear canvas
+
         gc.setFill(Color.WHITE);
         gc.fillRect(0, 0, width, height);
         
-        // Calculate origin point (center of the canvas)
+
         double originX = width / 2;
         double originY = height / 3;
         
-        // Calculate positions
+
         double x1 = originX + length1 * Math.sin(angle1);
         double y1 = originY + length1 * Math.cos(angle1);
         double x2 = x1 + length2 * Math.sin(angle2);
         double y2 = y1 + length2 * Math.cos(angle2);
         
-        // Draw trail
+
         gc.setStroke(Color.rgb(0, 150, 255, 0.2));
         gc.beginPath();
         for (int i = 0; i < trail.size() - 1; i++) {
@@ -95,19 +95,19 @@ public class DoublePendulumSimulation implements PhysicsSimulation {
         }
         gc.stroke();
         
-        // Update trail
+
         trail.add(new Point(x2, y2));
         if (trail.size() > MAX_TRAIL_LENGTH) {
             trail.remove(0);
         }
         
-        // Draw pendulum arms
+
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(2);
         gc.strokeLine(originX, originY, x1, y1);
         gc.strokeLine(x1, y1, x2, y2);
         
-        // Draw bobs
+
         gc.setFill(Color.BLACK);
         double bobRadius = 10;
         gc.fillOval(x1 - bobRadius, y1 - bobRadius, bobRadius * 2, bobRadius * 2);
